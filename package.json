@@ -1,0 +1,45 @@
+{
+  "name": "trade-calc-api",
+  "version": "0.0.1",
+  "description": "API for Trade Calculator App",
+  "main": "src/index.js",
+  "scripts": {
+    "start:dev": "cross-env nodemon --exec babel-node src/index.js",
+    "setup:dev": "cross-env npm run migrate:dev && npm run seed:dev",
+    "migrate:dev": "cross-env knex migrate:latest",
+    "seed:dev": "cross-env knex seed:run",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Martin-MacDonald/trade-calc-api.git"
+  },
+  "author": "Martin Bolton MacDonald",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Martin-MacDonald/trade-calc-api/issues"
+  },
+  "homepage": "https://github.com/Martin-MacDonald/trade-calc-api#readme",
+  "devDependencies": {
+    "@babel/core": "^7.3.3",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.1",
+    "cross-env": "^5.2.0",
+    "eslint": "^5.14.1",
+    "jest": "^24.1.0",
+    "nodemon": "^1.18.10"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.3",
+    "dotenv": "^6.2.0",
+    "express": "^4.16.4",
+    "express-session": "^1.15.6",
+    "knex": "^0.16.3",
+    "mysql2": "^1.6.5",
+    "nodemailer": "^5.1.1",
+    "objection": "^1.6.2",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0"
+  }
+}
