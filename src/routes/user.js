@@ -23,22 +23,6 @@ router.get('/', isAuthenticated, async (req, res) => {
   }
 });
 
-router.get('/players', isAuthenticated, async (req, res) => {
-  try {
-    const players = await User
-      .query()
-      .select('username')
-      .where('id', req.user.id)
-      .eager('players.[position, team]');
-    if (!players) {
-      res.sendStatus(404);
-    }
-    res.json(players);
-  } catch (err) {
-    res.status(400).send(err);
-  }
-});
-
 router.get('/verifyEmail', async (req, res) => {
   try {
     const verifiedUser = await UserVerification
@@ -55,6 +39,34 @@ router.get('/verifyEmail', async (req, res) => {
     await UserVerification
       .query()
       .deleteById(verifiedUser.id);
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+router.post('/checkUsername', async (req, res) => {
+  try {
+    const { username } = req.body;
+    const user = await User
+      .query()
+      .where('username', username)
+      .first();
+    if (user) throw new Error('username already exists');
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+router.post('/checkEmail', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User
+      .query()
+      .where('email', email)
+      .first();
+    if (user) throw new Error('an account with that email already exists');
     res.sendStatus(200);
   } catch (err) {
     res.status(400).send(err);
@@ -85,27 +97,6 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', passport.authenticate('local'), async (req, res) => {
   res.json();
-});
-
-router.post('/select', isAuthenticated, async (req, res) => {
-  try {
-    if (!req.body.selections) {
-      throw new Error('no selection provided');
-    }
-    const selections = req.body.selections;
-    await UserSelection
-      .query()
-      .delete()
-      .where('userId', req.user.id);
-    for (let i = 0; i < selections.length; i++) {
-      await UserSelection
-        .query()
-        .insert({ userId: req.user.id, playerId: selections[i].playerId });
-    }
-    res.sendStatus(201);
-  } catch (err) {
-    res.status(400).send(err);
-  }
 });
 
 export default router;
