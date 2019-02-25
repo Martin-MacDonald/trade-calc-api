@@ -7,7 +7,7 @@ import { sendVerificationEmail } from '../helpers/email';
 
 const router = express.Router();
 
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', isAuthenticated, async (req, res, next) => {
   try {
     const user = await User
       .query()
@@ -19,11 +19,11 @@ router.get('/', isAuthenticated, async (req, res) => {
     }
     res.json(user);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 });
 
-router.get('/verifyEmail', async (req, res) => {
+router.get('/verifyEmail', async (req, res, next) => {
   try {
     const verifiedUser = await UserVerification
       .query()
@@ -31,7 +31,7 @@ router.get('/verifyEmail', async (req, res) => {
       .eager('user')
       .first();    
     if (!verifiedUser) {
-      throw new Error('no user found for that verification key');
+      res.sendStatus(404);
     }
     await User
       .query()
@@ -41,39 +41,43 @@ router.get('/verifyEmail', async (req, res) => {
       .deleteById(verifiedUser.id);
     res.sendStatus(200);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 });
 
-router.post('/checkUsername', async (req, res) => {
+router.post('/checkUsername', async (req, res, next) => {
   try {
     const { username } = req.body;
     const user = await User
       .query()
       .where('username', username)
       .first();
-    if (user) throw new Error('username already exists');
+    if (user) {
+      res.sendStatus(409);
+    }
     res.sendStatus(200);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 });
 
-router.post('/checkEmail', async (req, res) => {
+router.post('/checkEmail', async (req, res, next) => {
   try {
     const { email } = req.body;
     const user = await User
       .query()
       .where('email', email)
       .first();
-    if (user) throw new Error('an account with that email already exists');
+    if (user) {
+      res.sendStatus(409);
+    }
     res.sendStatus(200);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 });
 
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { username, password, email } = req.body;
     const verificationKey = crypto.randomBytes(48).toString('hex');
@@ -91,7 +95,7 @@ router.post('/register', async (req, res) => {
     sendVerificationEmail('mmacdo54@caledonian.ac.uk', verificationKey);
     res.sendStatus(201);
   } catch (err) {
-    res.status(400).send(err);
+    next(err);
   }
 });
 
