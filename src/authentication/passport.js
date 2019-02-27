@@ -3,7 +3,7 @@ import LocalStrategy from 'passport-local';
 import { User } from '../models';
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  return done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -12,21 +12,24 @@ passport.deserializeUser(async (id, done) => {
       .query()
       .where({ id })
       .first();
-    done(null, user);
+    return done(null, user);
   } catch (err) {
-    done(err, null);
+    return done(err, null);
   }
 });
 
 passport.use(new LocalStrategy(
   async (username, password, done) => {
-    const user = await User
-      .query()
-      .where({ username })
-      .first();
-    if (!user || !(User.verifyPassword(password, user.password))) {
-      done(null, false);
+    try {
+      const user = await User
+        .query()
+        .findOne({ username });
+      if (!user || !(User.verifyPassword(password, user.password))) {
+        return done(null, false);
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
     }
-    done(null, user);
   },
 ));

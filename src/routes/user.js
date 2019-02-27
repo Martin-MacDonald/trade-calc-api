@@ -9,11 +9,11 @@ const router = express.Router();
 
 router.get('/', isAuthenticated, async (req, res, next) => {
   try {
+    const id = req.user.id;
     const user = await User
       .query()
       .select('username', 'email')
-      .where('id', req.user.id)
-      .first();
+      .findOne({ id });
     if (!user) {
       res.sendStatus(404);
     }
@@ -25,11 +25,11 @@ router.get('/', isAuthenticated, async (req, res, next) => {
 
 router.get('/verifyEmail', async (req, res, next) => {
   try {
+    const verificationKey = req.query.verificationKey;
     const verifiedUser = await UserVerification
       .query()
-      .where('verificationKey', req.query.verificationKey)
-      .eager('user')
-      .first();    
+      .findOne({ verificationKey })
+      .eager('user'); 
     if (!verifiedUser) {
       res.sendStatus(404);
     }
@@ -50,8 +50,7 @@ router.post('/checkUsername', async (req, res, next) => {
     const { username } = req.body;
     const user = await User
       .query()
-      .where('username', username)
-      .first();
+      .findOne({ username });
     if (user) {
       res.sendStatus(409);
     }
@@ -66,8 +65,7 @@ router.post('/checkEmail', async (req, res, next) => {
     const { email } = req.body;
     const user = await User
       .query()
-      .where('email', email)
-      .first();
+      .findOne({ email });
     if (user) {
       res.sendStatus(409);
     }
@@ -100,6 +98,10 @@ router.post('/register', async (req, res, next) => {
 });
 
 router.post('/login', passport.authenticate('local'), async (req, res) => {
+  if (!req.user.isVerified) {
+    req.session.destroy();
+    res.status(401).json({ notVerified: true });
+  }
   res.json();
 });
 
