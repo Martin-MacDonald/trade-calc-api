@@ -45,6 +45,23 @@ router.get('/verifyEmail', async (req, res, next) => {
   }
 });
 
+router.post('/resendVerification', async (req, res, next) => {
+  try {
+    const email = req.body.email;
+    const user = await User
+      .query()
+      .findOne({ email })
+      .eager('verification');
+    if (!user || !user.verification) {
+      res.sendStatus(404);
+    }
+    sendVerificationEmail('mmacdo54@caledonian.ac.uk', user.verification.verificationKey);
+    res.sendStatus(200);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/checkUsername', async (req, res, next) => {
   try {
     const { username } = req.body;
