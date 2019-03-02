@@ -15,7 +15,7 @@ router.get('/', isAuthenticated, async (req, res, next) => {
       .select('username', 'email')
       .findById(id);
     if (!user) {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
     res.json(user);
   } catch (err) {
@@ -31,7 +31,7 @@ router.get('/verifyEmail', async (req, res, next) => {
       .findOne({ verificationKey })
       .eager('user'); 
     if (!verifiedUser) {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
     await User
       .query()
@@ -53,7 +53,7 @@ router.post('/resendVerification', async (req, res, next) => {
       .findOne({ email })
       .eager('verification');
     if (!user || !user.verification) {
-      res.sendStatus(404);
+      return res.sendStatus(404);
     }
     sendVerificationEmail('mmacdo54@caledonian.ac.uk', user.verification.verificationKey);
     res.sendStatus(200);
@@ -69,7 +69,7 @@ router.post('/checkUsername', async (req, res, next) => {
       .query()
       .findOne({ username });
     if (user) {
-      res.sendStatus(409);
+      return res.sendStatus(409);
     }
     res.sendStatus(200);
   } catch (err) {
@@ -84,7 +84,7 @@ router.post('/checkEmail', async (req, res, next) => {
       .query()
       .findOne({ email });
     if (user) {
-      res.sendStatus(409);
+      return res.sendStatus(409);
     }
     res.sendStatus(200);
   } catch (err) {
@@ -117,7 +117,7 @@ router.post('/register', async (req, res, next) => {
 router.post('/login', passport.authenticate('local'), async (req, res) => {
   if (!req.user.isVerified) {
     req.session.destroy();
-    res.status(401).json({ notVerified: true });
+    return res.status(401).json({ notVerified: true });
   }
   res.json();
 });
