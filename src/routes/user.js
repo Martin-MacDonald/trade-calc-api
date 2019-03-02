@@ -13,7 +13,7 @@ router.get('/', isAuthenticated, async (req, res, next) => {
     const user = await User
       .query()
       .select('username', 'email')
-      .findOne({ id });
+      .findById(id);
     if (!user) {
       res.sendStatus(404);
     }
