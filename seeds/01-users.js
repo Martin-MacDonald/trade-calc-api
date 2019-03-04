@@ -1,5 +1,5 @@
-exports.seed = knex => knex('userVerifications')
-.del()
+exports.seed = knex => knex('userVerifications').del()
+.then(() => knex('passwordResets').del())
 .then(() => knex('users').del())
 .then(() => knex('users')
   .insert([

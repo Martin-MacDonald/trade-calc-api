@@ -1,9 +1,9 @@
 import express from 'express';
 import passport from 'passport';
 import crypto from 'crypto';
-import { User, UserVerification } from '../models';
+import { User, UserVerification, PasswordReset } from '../models';
 import isAuthenticated from '../authentication/auth';
-import { sendVerificationEmail } from '../helpers/email';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../helpers/email';
 
 const router = express.Router();
 
@@ -55,7 +55,7 @@ router.post('/resendVerification', async (req, res, next) => {
     if (!user || !user.verification) {
       return res.sendStatus(404);
     }
-    sendVerificationEmail('mmacdo54@caledonian.ac.uk', user.verification.verificationKey);
+    sendVerificationEmail(user.email, user.verification.verificationKey);
     res.sendStatus(200);
   } catch (err) {
     next(err);
@@ -92,13 +92,37 @@ router.post('/checkEmail', async (req, res, next) => {
   }
 });
 
+router.post('/forgotPass', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User
+      .query()
+      .findOne({ email });
+    if (!user) {
+      res.sendStatus(404);
+      return;
+    }
+    const resetKey = crypto.randomBytes(48).toString('hex');
+    const passwordReset = await PasswordReset
+      .query()
+      .insertAndFetch({
+        userId: user.id,
+        resetKey,
+      });
+    sendPasswordResetEmail(user.email, passwordReset.resetKey);
+    res.sendStatus(200);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/register', async (req, res, next) => {
   try {
     const { username, password, email } = req.body;
     const verificationKey = crypto.randomBytes(48).toString('hex');
-    await User
+    const user = await User
       .query()
-      .insertWithRelated({
+      .insertWithRelatedAndFetch({
         username,
         email,
         password,
@@ -107,7 +131,7 @@ router.post('/register', async (req, res, next) => {
           verificationKey,
         }
       });
-    sendVerificationEmail('mmacdo54@caledonian.ac.uk', verificationKey);
+    sendVerificationEmail(user.email, verificationKey);
     res.sendStatus(201);
   } catch (err) {
     next(err);

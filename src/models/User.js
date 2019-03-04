@@ -1,6 +1,6 @@
 import { Model } from 'objection';
 import bcrypt from 'bcryptjs';
-import { UserVerification } from '.';
+import { UserVerification, PasswordReset } from '.';
 
 class User extends Model {
   static get tableName() {
@@ -47,6 +47,14 @@ class User extends Model {
         join: {
           from: 'users.id',
           to: 'userVerifications.userId',
+        },
+      },
+      passwordReset: {
+        relation: Model.HasManyRelation,
+        modelClass: PasswordReset,
+        join: {
+          from: 'users.id',
+          to: 'passwordResets.userId',
         },
       },
     };
